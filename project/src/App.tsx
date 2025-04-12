@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { Bot, NotebookPen, FileText, Plus, Send, X, Maximize2, ArrowLeft, Sparkles } from 'lucide-react';
 
+enum AgentType {
+  HABIT_TRACKER = 'habit-tracker',
+  PHYSICS_NOTES = 'physics-notes',
+  DESKTOP_AGENT = 'desktop-agent',
+  CUSTOM_NOTION = 'custom-notion'
+}
+
 interface Message {
   id: string;
   content: string;
@@ -11,7 +18,7 @@ interface Message {
 interface Agent {
   id: string;
   name: string;
-  type: 'notion' | 'notes';
+  type: AgentType;
   avatar: string;
   description: string;
   messages: Message[];
@@ -27,11 +34,30 @@ function App() {
   const handleGenerateAgent = () => {
     if (!prompt.trim()) return;
 
+    let agentType: AgentType;
+    let agentName: string;
+
+    if (prompt.toLowerCase().endsWith('habit tracker')) {
+      agentType = AgentType.HABIT_TRACKER;
+      agentName = 'Habit Tracker Assistant';
+    } else if (prompt.toLowerCase().endsWith('physics notes')) {
+      agentType = AgentType.PHYSICS_NOTES;
+      agentName = 'Physics Notes Assistant';
+    } else if (prompt.toLowerCase().startsWith('code me an app')) {
+      agentType = AgentType.DESKTOP_AGENT;
+      agentName = 'Desktop App Developer';
+    } else if (prompt.toLowerCase().startsWith('create me an agent to')) {
+      agentType = AgentType.CUSTOM_NOTION;
+      agentName = 'Custom Notion Agent';
+    } else {
+      return;
+    }
+
     const newAgent: Agent = {
       id: Date.now().toString(),
-      name: `Agent ${agents.length + 1}`,
-      type: Math.random() > 0.5 ? 'notion' : 'notes',
-      avatar: `https://source.unsplash.com/random/200x200?abstract,${Date.now()}`,
+      name: agentName,
+      type: agentType,
+      avatar: `https://source.unsplash.com/random/200x200?${agentType},${Date.now()}`,
       description: prompt,
       messages: []
     };
@@ -50,9 +76,25 @@ function App() {
       timestamp: new Date()
     };
 
+    let responseContent = '';
+    switch (selectedAgent.type) {
+      case AgentType.HABIT_TRACKER:
+        responseContent = "I've logged your habit. Keep up the good work! Would you like to see your progress or set a new habit?";
+        break;
+      case AgentType.PHYSICS_NOTES:
+        responseContent = "I've added this to your physics notes. Would you like me to explain this concept further or provide related examples?";
+        break;
+      case AgentType.DESKTOP_AGENT:
+        responseContent = "I can help you code that app. Let's break down the requirements and start with the basic structure.";
+        break;
+      case AgentType.CUSTOM_NOTION:
+        responseContent = "I've updated your Notion workspace with this information. Would you like me to organize it or create a new page?";
+        break;
+    }
+
     const agentResponse: Message = {
       id: (Date.now() + 1).toString(),
-      content: `Response as ${selectedAgent.name}: ${currentMessage}`,
+      content: responseContent,
       sender: 'agent',
       timestamp: new Date()
     };
@@ -67,6 +109,24 @@ function App() {
     ));
     setSelectedAgent(updatedAgent);
     setCurrentMessage('');
+  };
+
+  const handleOpenChat = () => {
+    setChatMode(true);
+    setCurrentMessage(''); // Clear the input when opening chat
+  };
+
+  const getAgentIcon = (type: AgentType) => {
+    switch (type) {
+      case AgentType.HABIT_TRACKER:
+        return <Sparkles className="w-4 h-4" />;
+      case AgentType.PHYSICS_NOTES:
+        return <FileText className="w-4 h-4" />;
+      case AgentType.DESKTOP_AGENT:
+        return <Bot className="w-4 h-4" />;
+      case AgentType.CUSTOM_NOTION:
+        return <NotebookPen className="w-4 h-4" />;
+    }
   };
 
   const ChatInterface = () => (
@@ -87,11 +147,7 @@ function App() {
         <div>
           <h2 className="text-xl font-bold text-white">{selectedAgent?.name}</h2>
           <div className="flex items-center gap-2 text-gray-400">
-            {selectedAgent?.type === 'notion' ? (
-              <NotebookPen className="w-4 h-4" />
-            ) : (
-              <FileText className="w-4 h-4" />
-            )}
+            {getAgentIcon(selectedAgent?.type)}
             <span className="capitalize">{selectedAgent?.type} Agent</span>
           </div>
         </div>
@@ -129,13 +185,19 @@ function App() {
             type="text"
             value={currentMessage}
             onChange={(e) => setCurrentMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} // Changed from onKeyPress to onKeyDown
             placeholder={`Ask ${selectedAgent?.name} anything...`}
             className="flex-1 bg-gray-900 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
+            autoFocus // Add autofocus to improve UX
           />
           <button
             onClick={handleSendMessage}
-            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-6 py-3 flex items-center gap-2 transition-colors"
+            disabled={!currentMessage.trim()} // Disable if empty
+            className={`${
+              currentMessage.trim() 
+                ? 'bg-blue-500 hover:bg-blue-600' 
+                : 'bg-blue-500/50 cursor-not-allowed'
+            } text-white rounded-lg px-6 py-3 flex items-center gap-2 transition-colors`}
           >
             <Send className="w-5 h-5" />
           </button>
@@ -180,11 +242,7 @@ function App() {
                     <div>
                       <h3 className="text-xl font-semibold">{agent.name}</h3>
                       <div className="flex items-center gap-2 text-gray-400">
-                        {agent.type === 'notion' ? (
-                          <NotebookPen className="w-4 h-4" />
-                        ) : (
-                          <FileText className="w-4 h-4" />
-                        )}
+                        {getAgentIcon(agent.type)}
                         <span className="capitalize">{agent.type} Agent</span>
                       </div>
                     </div>
@@ -233,11 +291,7 @@ function App() {
                   <div>
                     <h2 className="text-2xl font-bold">{selectedAgent.name}</h2>
                     <div className="flex items-center gap-2 text-gray-400">
-                      {selectedAgent.type === 'notion' ? (
-                        <NotebookPen className="w-4 h-4" />
-                      ) : (
-                        <FileText className="w-4 h-4" />
-                      )}
+                      {getAgentIcon(selectedAgent.type)}
                       <span className="capitalize">{selectedAgent.type} Agent</span>
                     </div>
                   </div>
@@ -264,7 +318,7 @@ function App() {
                   Close
                 </button>
                 <button
-                  onClick={() => setChatMode(true)}
+                  onClick={handleOpenChat}
                   className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-6 py-3 flex items-center justify-center gap-2 transition-colors"
                 >
                   <Maximize2 className="w-5 h-5" />
