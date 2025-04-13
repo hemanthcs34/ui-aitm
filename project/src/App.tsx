@@ -419,12 +419,6 @@ function App() {
         <div className="p-6 h-full flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold">Agent Creation Guide</h2>
-            <button 
-              onClick={() => setIsSidebarOpen(false)}
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-800 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
           </div>
           
           <div className="space-y-6 flex-1 overflow-auto">
@@ -519,7 +513,7 @@ function App() {
           </header>
 
           {/* Input Area */}
-          <div className="sticky top-0 z-20 py-6 bg-gradient-to-b from-gray-950 via-gray-950 to-transparent">
+          <div className="sticky top-0 z-20 py-6 bg-gradient-to-br from-gray-950 to-gray-900 backdrop-blur-sm">
             <div className="relative max-w-3xl mx-auto">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full opacity-75 blur-sm"></div>
               <div 
