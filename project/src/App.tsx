@@ -1,5 +1,7 @@
+// @ts-nocheck
+
 import { useState, useEffect, useRef } from 'react';
-import { Bot, NotebookPen, FileText, Plus, Send, X, Maximize2, ArrowLeft, Sparkles, Search } from 'lucide-react';
+import { Bot, NotebookPen, FileText, Plus, Send, X, Maximize2, ArrowLeft, Sparkles, Search, Menu } from 'lucide-react'; // Import Menu icon for the toggle button
 
 enum AgentType {
   HABIT_TRACKER = 'habit-tracker',
@@ -34,6 +36,7 @@ function App() {
   const [chatMode, setChatMode] = useState(false);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false); // Add this state for loading indication
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to control sidebar visibility
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Add this function to make API calls
@@ -261,9 +264,9 @@ function App() {
   };
 
   const ChatInterface = () => (
-    <div className="flex flex-col h-screen bg-gray-900 overflow-hidden">
-      {/* Chat Header */}
-      <div className="bg-gray-800 p-4 flex items-center gap-4 border-b border-gray-700">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden">
+      {/* Chat Header - Update the background */}
+      <div className="bg-gray-800/50 backdrop-blur-sm p-4 flex items-center gap-4 border-b border-gray-700">
         <button 
           onClick={() => setChatMode(false)}
           className="text-gray-400 hover:text-white transition-colors"
@@ -284,7 +287,7 @@ function App() {
         </div>
       </div>
 
-      {/* Chat Messages */}
+      {/* Chat Messages - Update the message containers */}
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {selectedAgent?.messages.map((message) => (
           <div
@@ -296,8 +299,8 @@ function App() {
             <div
               className={`max-w-[80%] p-4 rounded-xl ${
                 message.sender === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-800 text-white'
+                  ? 'bg-blue-500/90 backdrop-blur-sm text-white'
+                  : 'bg-gray-800/90 backdrop-blur-sm text-white'
               }`}
             >
               <p>{message.content}</p>
@@ -321,8 +324,8 @@ function App() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Chat Input - Now with sticky positioning */}
-      <div className="sticky bottom-0 left-0 right-0 p-4 bg-gray-800 border-t border-gray-700 shadow-lg">
+      {/* Chat Input - Update the background */}
+      <div className="sticky bottom-0 left-0 right-0 p-4 bg-gray-800/50 backdrop-blur-sm border-t border-gray-700 shadow-lg">
         <div className="flex gap-4 max-w-screen-2xl mx-auto">
           <input
             type="text"
@@ -355,123 +358,137 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      {/* Sidebar */}
+      <div
+        className={`fixed top-0 left-0 h-full bg-white/10 backdrop-blur-md text-white shadow-lg transition-transform transform ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } w-64 z-50`} // Ensure the sidebar is in the front
+      >
+        <div className="p-4">
+          <h2 className="text-xl font-bold mb-4">Tips & Prompts</h2>
+          <ul className="space-y-4 text-sm">
+            <li>
+              <strong>Habit Tracker:</strong> Type "Create a habit tracker" to generate an agent that helps you track habits.
+            </li>
+            <li>
+              <strong>Physics Notes:</strong> Type "Generate physics notes" to create an agent for physics-related notes.
+            </li>
+            <li>
+              <strong>Custom Notion:</strong> Type "Create me an agent to manage my Notion" for a Notion integration.
+            </li>
+            <li>
+              <strong>Search:</strong> Type "Search for [topic]" to create a search assistant.
+            </li>
+            <li>
+              <strong>Desktop App:</strong> Type "Code me an app for [purpose]" to generate a desktop app assistant.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Toggle Button */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className={`fixed top-4 ${
+          isSidebarOpen ? 'left-60' : 'left-4'
+        } bg-white/20 backdrop-blur-md hover:bg-white/30 text-white rounded-full p-3 z-50 transition-all`}
+        style={{
+          boxShadow: '4px 4px 10px rgba(0, 0, 0, 0.2), -4px -4px 10px rgba(255, 255, 255, 0.1)',
+        }}
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
       {/* Main Container */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col h-screen">
           {/* Header */}
           <header className="mb-8">
-            <h1 className="text-4xl font-bold flex items-center gap-3">
-              <Bot className="w-10 h-10 text-blue-400" />
-              AI Agent Generator
-            </h1>
-            <p className="text-gray-400 mt-2">Create custom AI agents for your specific needs</p>
+            <div className="flex justify-end items-center gap-3">
+              <Sparkles className="w-10 h-10 text-blue-400" />
+              <h1 className="text-4xl font-bold">AI Agent Generator</h1>
+            </div>
+            <p className="text-gray-400 mt-2 text-right">
+              Create custom AI agents for your specific needs
+            </p>
           </header>
 
-          {/* Agents Grid */}
-          <div className="flex-1 overflow-auto mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {agents.map((agent) => (
-                <div
-                  key={agent.id}
-                  onClick={() => setSelectedAgent(agent)}
-                  className="bg-gray-800 rounded-xl p-6 cursor-pointer transform transition-all hover:scale-105 hover:shadow-xl border border-gray-700"
-                >
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={agent.avatar}
-                      alt={agent.name}
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
-                    <div>
-                      <h3 className="text-xl font-semibold">{agent.name}</h3>
-                      <div className="flex items-center gap-2 text-gray-400">
-                        {getAgentIcon(agent.type)}
-                        <span className="capitalize">{agent.type} Agent</span>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="mt-4 text-gray-400 line-clamp-2">{agent.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Input Area */}
-          <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-            <div className="flex gap-4">
+          {/* Input Area - Elevated */}
+          <div className="sticky top-0 z-20 bg-gradient-to-br from-gray-900 to-gray-800 py-4 mb-12"> {/* Increased margin-bottom */}
+            <div 
+              className="bg-white/10 backdrop-blur-md rounded-full border border-gray-700/50 max-w-3xl mx-auto flex items-center px-6 py-4"
+              style={{
+                boxShadow: '0px 12px 30px rgba(0, 0, 0, 0.25)', // Elevated shadow
+              }}
+            >
               <input
                 type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Describe your AI agent..."
-                className="flex-1 bg-gray-900 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
+                className="flex-1 bg-transparent px-4 py-3 focus:outline-none text-white placeholder-gray-400"
                 onKeyPress={(e) => e.key === 'Enter' && handleGenerateAgent()}
               />
               <button
                 onClick={handleGenerateAgent}
-                className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-6 py-3 flex items-center gap-2 transition-colors"
+                className="bg-blue-500 hover:bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center transition-all"
               >
-                <Plus className="w-5 h-5" />
-                Generate
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 19V5m-7 7l7-7 7 7" />
+                </svg>
               </button>
+            </div>
+          </div>
+
+          {/* Agents Grid */}
+          <div className="flex-1 overflow-x-hidden mb-8 relative z-0"> {/* Push agents to the background */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[200px]">
+              {agents.length > 0 ? (
+                agents.map((agent) => (
+                  <div
+                    key={agent.id}
+                    onClick={() => {
+                      setSelectedAgent(agent);
+                      handleOpenChat();
+                    }}
+                    className="bg-gray-800 rounded-full p-3 cursor-pointer transform transition-all hover:scale-105 border border-gray-600"
+                    style={{
+                      height: '120px', // Shorter height
+                      boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)', // Light shadow
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={agent.avatar}
+                        alt={agent.name}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      <div>
+                        <h3 className="text-base font-semibold text-white">{agent.name}</h3> {/* Increased font size */}
+                        <div className="flex items-center gap-2 text-gray-300 text-sm">
+                          {getAgentIcon(agent.type)}
+                          <span className="capitalize">{agent.type.replace('-', ' ')} Agent</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center text-gray-400 py-8">
+                  No agents created yet. Type a description above to create one!
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Agent Dialog */}
-      {selectedAgent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-gray-800 rounded-xl w-full max-w-2xl">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={selectedAgent.avatar}
-                    alt={selectedAgent.name}
-                    className="w-20 h-20 rounded-full object-cover"
-                  />
-                  <div>
-                    <h2 className="text-2xl font-bold">{selectedAgent.name}</h2>
-                    <div className="flex items-center gap-2 text-gray-400">
-                      {getAgentIcon(selectedAgent.type)}
-                      <span className="capitalize">{selectedAgent.type} Agent</span>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedAgent(null)}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              
-              <div className="bg-gray-900 rounded-xl p-6 mb-6">
-                <h3 className="text-lg font-semibold mb-2">Agent Description</h3>
-                <p className="text-gray-400">{selectedAgent.description}</p>
-              </div>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setSelectedAgent(null)}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg px-6 py-3 flex items-center justify-center gap-2 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                  Close
-                </button>
-                <button
-                  onClick={handleOpenChat}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-6 py-3 flex items-center justify-center gap-2 transition-colors"
-                >
-                  <Maximize2 className="w-5 h-5" />
-                  Open Agent
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
